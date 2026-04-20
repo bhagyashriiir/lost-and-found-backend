@@ -1,7 +1,7 @@
 {
-  "name": "lost-and-found-frontend",
+  "name": "lost-and-found-backend",
   "version": "1.0.0",
-  "description": "A responsive frontend prototype for a digital lost and found platform designed to support item reporting, matching, and recovery across Dubai.",
+  "description": "Backend API for Lost & Found Dubai platform",
   "main": "script.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
