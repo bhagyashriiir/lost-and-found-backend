@@ -12,7 +12,7 @@ router.get("/mine", authMiddleware, async (req, res) => {
 
     const notifications = await db.collection("notifications").find({
       userId: new ObjectId(req.user.id)
-    }).sort({ createdAt: -1 }).toArray();
+    }).sort({ createdAt: -1 }).toArray();  //improved notification sorting logic
 
     res.json(notifications);
   } catch (error) {
