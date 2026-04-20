@@ -433,7 +433,6 @@ router.post("/google", async (req, res) => {
     const payload = ticket.getPayload();
 
     const email = payload.email;
-    const email = String(req.body.email || "").trim().toLowerCase();
     const name = payload.name;
 
     const db = getDB();
