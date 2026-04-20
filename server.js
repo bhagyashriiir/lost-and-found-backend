@@ -49,6 +49,12 @@ app.get("/", (req, res) => {
   res.send("Lost & Found API running");
 });
 
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "healthy"
+  });
+});
+
 io.use((socket, next) => {
   try {
     const token = socket.handshake.auth?.token;
