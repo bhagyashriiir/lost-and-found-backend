@@ -35,7 +35,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.set("io", io);
 
@@ -45,11 +45,6 @@ app.use("/api/claims", claimRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/feedback", require("./routes/feedback"));
-
-app.use(
-  "/uploads",
-  express.static(path.join(__dirname, "uploads"))
-);
 
 app.get("/", (req, res) => {
   res.send("Lost & Found API running");
@@ -95,6 +90,12 @@ io.on("connection", (socket) => {
     console.log(`Socket disconnected: ${socket.id}`);
   });
 });
+
+const fs = require("fs");
+
+const uploadsDir = path.join(__dirname, "uploads");
+
+fs.mkdirSync(uploadsDir, { recursive: true });
 
 async function startServer() {
   try {
