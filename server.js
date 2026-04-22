@@ -35,7 +35,12 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+const path = require("path");
+
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"))
+);
 
 app.set("io", io);
 
