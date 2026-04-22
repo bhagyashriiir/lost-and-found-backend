@@ -118,4 +118,10 @@ app.use((req, res) => {
   });
 });
 
+app.get("/debug/uploads", (req, res) => {
+  const fs = require("fs");
+  const files = fs.readdirSync(uploadsDir);
+  res.json(files);
+});
+
 startServer();
