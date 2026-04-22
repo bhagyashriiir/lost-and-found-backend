@@ -38,7 +38,7 @@ router.get("/", async (req, res) => {
     const db = getDB();
     const { venueType, category, location, cityArea, q } = req.query;
 
-    const filter = { status: { $ne: "Resolved" } };
+    const filter = { status: { $in: ["Open", "Resolved"] } };
 
     if (venueType) filter.venueType = normalizeVenueType(venueType);
     if (category) filter.category = category;
@@ -225,6 +225,17 @@ router.patch("/:id/status", authMiddleware, async (req, res) => {
     console.error("Update status error:", error);
     res.status(500).json({ message: "Server error" });
   }
+});
+
+router.get("/all", async (req, res) => {
+  const db = getDB();
+
+  const reports = await db
+    .collection("reports")
+    .find({})
+    .toArray();
+
+  res.json(reports);
 });
 
 module.exports = router;
