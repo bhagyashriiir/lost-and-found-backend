@@ -38,7 +38,7 @@ router.get("/", async (req, res) => {
     const db = getDB();
     const { venueType, category, location, cityArea, q } = req.query;
 
-    const filter = { status: { $in: ["Open", "Resolved"] } };
+    const filter = { status: "Open" };
 
     if (venueType) filter.venueType = normalizeVenueType(venueType);
     if (category) filter.category = category;
