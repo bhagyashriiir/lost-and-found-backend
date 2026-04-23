@@ -1,3 +1,4 @@
+// Normalize text by converting to lowercase and removing special characters
 function normalizeText(value) {
   return String(value || "")
     .toLowerCase()
@@ -6,22 +7,26 @@ function normalizeText(value) {
     .trim();
 }
 
+// Used to compare descriptions and identify common words
 function tokenize(value) {
   return normalizeText(value)
     .split(" ")
     .filter(Boolean);
 }
 
+// Calculate number of common keywords between two descriptions
 function intersectionCount(arr1, arr2) {
   const set2 = new Set(arr2);
   return arr1.filter((word) => set2.has(word)).length;
 }
 
+// Improves classification and matching accuracy for lost and found items
 function detectCategory(report) {
   const text = normalizeText(
     `${report.itemName || ""} ${report.category || ""} ${report.description || ""}`
   );
 
+  // Define keyword rules for identifying item categories
   const rules = [
     { category: "Wallet", keywords: ["wallet", "purse", "cardholder"] },
     { category: "Phone", keywords: ["phone", "iphone", "samsung", "mobile"] },
@@ -42,6 +47,7 @@ function detectCategory(report) {
   return report.category || "Other";
 }
 
+// Calculate similarity score based on item name and category
 function getImageSimilarityScore(source, target) {
   const sourceName = normalizeText(source.itemName);
   const targetName = normalizeText(target.itemName);
@@ -53,6 +59,7 @@ function getImageSimilarityScore(source, target) {
   return 8;
 }
 
+// Calculate overall similarity score between two reports
 function scoreReports(source, target) {
   let score = 0;
 
@@ -74,7 +81,7 @@ function scoreReports(source, target) {
   const sourceDescTokens = tokenize(`${source.itemName} ${source.description} ${source.category}`);
   const targetDescTokens = tokenize(`${target.itemName} ${target.description} ${target.category}`);
 
-  if (sourceCategory && targetCategory && sourceCategory === targetCategory) {
+  if (sourceCategory && targetCategory && sourceCategory === targetCategory) {  // Increase score when item categories match
     score += 26;
   }
 
@@ -88,7 +95,7 @@ function scoreReports(source, target) {
     score += 15;
   }
 
-  if (sourceLocation && targetLocation && sourceLocation === targetLocation) {
+  if (sourceLocation && targetLocation && sourceLocation === targetLocation) {  // Increase score when location or venue matches
     score += 15;
   }
 
@@ -104,12 +111,14 @@ function scoreReports(source, target) {
     score += 4;
   }
 
+  // Add score based on number of common keywords in descriptions
   const commonWords = intersectionCount(sourceDescTokens, targetDescTokens);
   score += Math.min(commonWords * 4, 20);
 
   return Math.min(score, 100);
 }
 
+// Identify possible matches between lost and found reports
 function findPossibleMatches(newReport, allReports) {
   const oppositeType = newReport.type === "lost" ? "found" : "lost";
 
@@ -128,19 +137,21 @@ function findPossibleMatches(newReport, allReports) {
         imageSimilarityScore: getImageSimilarityScore(newReport, report)
       };
     })
-    .filter((match) => match.confidence >= 35)
+    .filter((match) => match.confidence >= 35)  // Filter matches that meet minimum confidence threshold
     .sort((a, b) => b.confidence - a.confidence)
     .slice(0, 5);
 }
 
+// Check whether a new report is a duplicate of an existing report
 function isDuplicate(newReport, existingReports) {
   return existingReports.some((report) => {
     if (report.type !== newReport.type) return false;
     const duplicateScore = scoreReports(newReport, report);
-    return duplicateScore >= 75;
+    return duplicateScore >= 75;  // Identify duplicate if similarity score exceeds threshold
   });
 }
 
+// Export matching and duplicate detection functions for use in report processing
 module.exports = {
   detectCategory,
   scoreReports,

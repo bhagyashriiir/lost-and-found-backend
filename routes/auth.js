@@ -1,12 +1,15 @@
+// Import required modules for authentication and database operations
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { ObjectId } = require("mongodb");
 
+// Import database connection function to interact with MongoDB
 const { getDB } = require("../config/db");
 
 const router = express.Router();
 
+// Function to extract JWT token from Authorization header
 function getTokenFromHeader(req) {
   const authHeader = req.headers.authorization;
 
@@ -17,6 +20,7 @@ function getTokenFromHeader(req) {
   return authHeader.split(" ")[1];
 }
 
+// Route to register a new user account
 router.post("/signup", async (req, res) => {
   try {
     console.log("SIGNUP ROUTE HIT");
@@ -41,7 +45,7 @@ router.post("/signup", async (req, res) => {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);  // Hash the password before storing it in the database
 
     const user = {
       name,
@@ -70,6 +74,7 @@ router.post("/signup", async (req, res) => {
       });
     }
 
+    // Generate JWT token to authenticate user after successful signup
     const token = jwt.sign(
       {
         id: result.insertedId.toString(),
@@ -99,6 +104,7 @@ router.post("/signup", async (req, res) => {
   }
 });
 
+// Route to authenticate existing users
 router.post("/login", async (req, res) => {
   try {
     console.log("LOGIN ROUTE HIT");
@@ -125,6 +131,7 @@ router.post("/login", async (req, res) => {
       });
     }
 
+    // Compare entered password with stored hashed password
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
@@ -169,6 +176,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// Protected route to retrieve user profile information
 router.get("/profile", async (req, res) => {
   try {
     const token = getTokenFromHeader(req);
@@ -185,7 +193,7 @@ router.get("/profile", async (req, res) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify JWT token to ensure user is authenticated
     const db = getDB();
 
     const user = await db.collection("users").findOne(
@@ -215,6 +223,7 @@ router.get("/profile", async (req, res) => {
   }
 });
 
+// Route to update user profile information
 router.patch("/profile", async (req, res) => {
   try {
     const token = getTokenFromHeader(req);
@@ -242,7 +251,7 @@ router.patch("/profile", async (req, res) => {
       });
     }
 
-    await db.collection("users").updateOne(
+    await db.collection("users").updateOne(  // Update user details in database with new information
       { _id: new ObjectId(decoded.id) },
       {
         $set: {
@@ -263,13 +272,13 @@ router.patch("/profile", async (req, res) => {
     return res.json({
       message: "Profile updated successfully",
       user: {
-  id: updatedUser._id.toString(),
-  name: updatedUser.name,
-  email: updatedUser.email,
-  phone: updatedUser.phone || "",
-  bio: updatedUser.bio || "",
-  profileImage: updatedUser.profileImage || ""
-}
+        id: updatedUser._id.toString(),
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone || "",
+        bio: updatedUser.bio || "",
+        profileImage: updatedUser.profileImage || ""
+      }
     });
   } catch (error) {
     console.error("Update profile error:", error);
@@ -323,6 +332,7 @@ router.post(
   }
 );
 
+// Route to allow users to securely change their password
 router.post(
   "/change-password",
   async (req, res) => {
@@ -368,7 +378,7 @@ router.post(
 
       }
 
-      const hashedPassword =
+      const hashedPassword =  // Hash the new password before saving it
         await bcrypt.hash(
           newPassword,
           10
@@ -414,6 +424,7 @@ const client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID
 );
 
+// Google OAuth authentication integration
 router.post("/google", async (req, res) => {
   try {
     const { credential } = req.body;
@@ -424,7 +435,7 @@ router.post("/google", async (req, res) => {
       });
     }
 
-    // Verify Google token
+    // Verify Google ID token using OAuth2 client
     const ticket = await client.verifyIdToken({
       idToken: credential,
       audience: process.env.GOOGLE_CLIENT_ID
@@ -441,7 +452,7 @@ router.post("/google", async (req, res) => {
       .collection("users")
       .findOne({ email });
 
-    // If user doesn't exist — create
+    // If user doesn't exist- create
     if (!user) {
       const result = await db
         .collection("users")
@@ -485,6 +496,7 @@ router.post("/google", async (req, res) => {
   }
 });
 
+// Route to handle user logout
 router.post("/logout", async (req, res) => {
   try {
     res.json({

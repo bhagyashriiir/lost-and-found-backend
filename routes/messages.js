@@ -1,15 +1,19 @@
+// Import required modules for messaging functionality and database operations
 const express = require("express");
 const { ObjectId } = require("mongodb");
 
+// Ensures only logged-in users can access messaging features
 const { getDB } = require("../config/db");
 const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+// Function to safely validate and convert string IDs into MongoDB ObjectId format
 function safeObjectId(id) {
   return ObjectId.isValid(id) ? new ObjectId(id) : null;
 }
 
+// Identifies whether the message belongs to the current user
 function formatMessage(message, currentUserId) {
   return {
     id: message._id.toString(),
@@ -21,6 +25,8 @@ function formatMessage(message, currentUserId) {
   };
 }
 
+// Function to construct chat details including user information,
+// item details and contact visibility settings
 async function buildChatPayload(db, chat, currentUserId) {
   const owner = await db.collection("users").findOne(
     { _id: new ObjectId(chat.ownerUserId) },
@@ -64,10 +70,7 @@ async function buildChatPayload(db, chat, currentUserId) {
   };
 }
 
-/**
- * Start or get a chat for a report
- * body: { reportId }
- */
+// Route to start a new secure chat or retrieve an existing chat
 router.post("/start", authMiddleware, async (req, res) => {
   try {
     const db = getDB();
@@ -85,7 +88,7 @@ router.post("/start", authMiddleware, async (req, res) => {
       return res.status(404).json({ message: "Report not found" });
     }
 
-    if (report.ownerUserId === req.user.id) {
+    if (report.ownerUserId === req.user.id) {  // Prevent users from messaging their own reported items
       return res.status(400).json({ message: "You cannot message your own report" });
     }
 
@@ -96,18 +99,17 @@ router.post("/start", authMiddleware, async (req, res) => {
     });
 
     if (!chat) {
-      const newChat = {
-  type: "chat",   // ⭐ REQUIRED
-
+      const newChat = {  // Create a new chat record in the database
+  type: "chat",  
   reportId: reportId,
   ownerUserId: report.ownerUserId,
   claimantUserId: req.user.id,
   claimId: "",
-  contactUnlocked: false,
+  contactUnlocked: false,  // Contact information is locked until the claim is verified
 
   lastMessage: "",
   lastMessageAt: null,
-
+  
   createdAt: new Date(),
   updatedAt: new Date()
 };
@@ -124,10 +126,7 @@ router.post("/start", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * Get all chats for logged-in user
- */
-
+// Route to retrieve all chat conversations for the logged-in user
 router.get("/threads", authMiddleware, async (req, res) => {
   try {
     const db = getDB();
@@ -156,9 +155,7 @@ router.get("/threads", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * Get one chat + messages
- */
+// Route to load messages for a specific chat conversation
 router.get("/:chatId", authMiddleware, async (req, res) => {
   try {
     const db = getDB();
@@ -174,7 +171,8 @@ router.get("/:chatId", authMiddleware, async (req, res) => {
       return res.status(404).json({ message: "Chat not found" });
     }
 
-    const isParticipant =
+    // Verify that the user is a participant in the chat
+    const isParticipant =  
       chat.ownerUserId === req.user.id || chat.claimantUserId === req.user.id;
 
     if (!isParticipant) {
@@ -183,7 +181,7 @@ router.get("/:chatId", authMiddleware, async (req, res) => {
 
     const messages = await db.collection("messages")
       .find({
-        type: "message",   // ✅ ADD THIS
+        type: "message",   
         chatId: chat._id.toString()
       })
 
@@ -202,10 +200,7 @@ router.get("/:chatId", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * Send message
- * body: { text }
- */
+// Route to send a secure message between users
 router.post("/:chatId/send", authMiddleware, async (req, res) => {
   try {
     const db = getDB();
@@ -218,7 +213,7 @@ router.post("/:chatId/send", authMiddleware, async (req, res) => {
       return res.status(400).json({ message: "Invalid chat id" });
     }
 
-    if (!text) {
+    if (!text) {  // Validate that message text is provided before sending
       return res.status(400).json({ message: "Message text is required" });
     }
 
@@ -246,8 +241,10 @@ router.post("/:chatId/send", authMiddleware, async (req, res) => {
       createdAt: new Date()
     };
 
+    // Insert message into database collection
     const result = await db.collection("messages").insertOne(message);
 
+    // Update chat record with latest message details
     await db.collection("messages").updateOne(
       { _id: chat._id },
       {
@@ -274,7 +271,7 @@ router.post("/:chatId/send", authMiddleware, async (req, res) => {
 
     console.log("NOTIFICATION SENT TO:", receiverUserId);
 
-    // Save notification
+    // Save notification to database when a new message is received
     await db.collection("notifications").insertOne({
       userId: receiverUserId,
       type: "message",
@@ -284,7 +281,7 @@ router.post("/:chatId/send", authMiddleware, async (req, res) => {
       createdAt: new Date()
     });
 
-    // Emit notification
+    // Emit real-time notification to the receiver using Socket.IO
     io.to(`user:${receiverUserId}`).emit(
       "newNotification",
       {
@@ -294,7 +291,7 @@ router.post("/:chatId/send", authMiddleware, async (req, res) => {
       }
     );
 
-    // Emit real-time message
+    // Emit real-time message event to update chat instantly
     io.to(`chat:${chat._id.toString()}`).emit(
       "new-message",
       {

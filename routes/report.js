@@ -5,6 +5,9 @@ const { ObjectId } = require("mongodb");
 
 const { getDB } = require("../config/db");
 const authMiddleware = require("../middleware/authMiddleware");
+
+// Import intelligent matching functions for category detection,
+// duplicate detection and possible match suggestions
 const {
   detectCategory,
   findPossibleMatches,
@@ -13,6 +16,7 @@ const {
 
 const router = express.Router();
 
+// Normalize venue type input to maintain consistent values
 function normalizeVenueType(value) {
   const normalized = String(value || "").trim().toLowerCase();
   if (normalized.includes("mall")) return "Mall";
@@ -21,6 +25,7 @@ function normalizeVenueType(value) {
   return value || "";
 }
 
+// Configure storage settings for uploaded report images
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/");
@@ -33,12 +38,13 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+// Route to retrieve all open reports with optional filtering
 router.get("/", async (req, res) => {
   try {
     const db = getDB();
     const { venueType, category, location, cityArea, q } = req.query;
 
-    const filter = { status: "Open" };
+    const filter = { status: "Open" };  
 
     if (venueType) filter.venueType = normalizeVenueType(venueType);
     if (category) filter.category = category;
@@ -66,9 +72,10 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Route to retrieve reports created by the logged-in user
 router.get("/mine", authMiddleware, async (req, res) => {
   try {
-    const db = getDB();   // REQUIRED
+    const db = getDB();   
 
     const reports = await db
       .collection("reports")
@@ -87,6 +94,7 @@ router.get("/mine", authMiddleware, async (req, res) => {
   }
 });
 
+// Route to submit a new lost or found report
 router.post(
   "/",
   authMiddleware,
@@ -113,16 +121,19 @@ router.post(
         verificationQuestion2
       } = req.body;
 
+      // Automatically determine item category using intelligent keyword detection
       const autoCategory = detectCategory(
         itemName,
         description,
         category
       );
 
+      // Store image path if file was uploaded
       const imagePath = req.file
         ? `/uploads/${req.file.filename}`
         : null;
 
+        // Create report object containing item details and verification questions
       const baseReport = {
         type,
         userName,
@@ -149,11 +160,13 @@ router.post(
         .find({})
         .toArray();
 
+        // Check if the new report is a duplicate of an existing report
       baseReport.duplicateFlag = isDuplicate(
         baseReport,
         existingReports
       );
 
+      // Find possible matching reports based on similarity scoring
       const possibleMatches = findPossibleMatches(
         baseReport,
         existingReports
@@ -161,10 +174,12 @@ router.post(
 
       baseReport.possibleMatches = possibleMatches;
 
+      // Insert new report into database collection
       const result = await db
         .collection("reports")
         .insertOne(baseReport);
 
+        // Emit real-time event to notify users about new report creation
       const io = req.app.get("io");
 
       io.emit("reportCreated", {
@@ -192,6 +207,7 @@ router.post(
   }
 );
 
+// Route to update report status (e.g., mark item as resolved)
 router.patch("/:id/status", authMiddleware, async (req, res) => {
   try {
     const db = getDB();
@@ -206,11 +222,11 @@ router.patch("/:id/status", authMiddleware, async (req, res) => {
       return res.status(404).json({ message: "Report not found" });
     }
 
-    if (report.ownerUserId !== req.user.id) {
+    if (report.ownerUserId !== req.user.id) {  // Ensure only the report owner can update the report status
       return res.status(403).json({ message: "Not allowed" });
     }
 
-    await db.collection("reports").updateOne(
+    await db.collection("reports").updateOne(  // Update report status in database
       { _id: new ObjectId(reportId) },
       {
         $set: {

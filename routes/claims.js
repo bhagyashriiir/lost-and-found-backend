@@ -1,13 +1,18 @@
 console.log("CLAIMS ROUTE LOADED");
 
+// Import required modules for handling claims, database operations and authentication
 const express = require("express");
 const { ObjectId } = require("mongodb");
 
+// Import database connection and authentication middleware
 const { getDB } = require("../config/db");
 const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+// Function to normalize text by converting to lowercase,
+// removing special characters and trimming spaces
+// This improves accuracy when comparing user verification answers
 function normalizeText(value) {
   return String(value || "")
     .toLowerCase()
@@ -16,10 +21,12 @@ function normalizeText(value) {
     .trim();
 }
 
+// Used to compare keywords between expected and user-provided answers
 function getTokens(value) {
   return normalizeText(value).split(" ").filter(Boolean);
 }
 
+// Function to compare expected verification answers with user input
 function compareAnswer(expected, actual) {
   const expectedText = normalizeText(expected);
   const actualText = normalizeText(actual);
@@ -45,6 +52,7 @@ function compareAnswer(expected, actual) {
   return coverage >= 0.5;
 }
 
+// Function to retrieve verification questions from the report
 function getVerificationChecks(report) {
   const checks = [];
 
@@ -65,6 +73,7 @@ function getVerificationChecks(report) {
   return checks;
 }
 
+// Route to submit a claim for a lost or found item
 router.post("/", authMiddleware, async (req, res) => {
   try {
     const db = getDB();
@@ -82,11 +91,11 @@ router.post("/", authMiddleware, async (req, res) => {
       return res.status(404).json({ message: "Report not found" });
     }
 
-    if (report.ownerUserId === req.user.id) {
+    if (report.ownerUserId === req.user.id) {  // Prevent users from claiming their own reported items
       return res.status(400).json({ message: "You cannot claim your own item" });
     }
 
-    if (report.status === "Resolved") {
+    if (report.status === "Resolved") {  // Check if the item has already been resolved
       return res.status(400).json({ message: "This item is already closed" });
     }
 
@@ -115,6 +124,7 @@ router.post("/", authMiddleware, async (req, res) => {
 
     const isVerified = verificationResults.every((result) => result.matched);
 
+    // Create a new claim record in the database
     const claim = {
       reportId,
       ownerUserId: report.ownerUserId,
@@ -136,6 +146,7 @@ const ownerUserId = report.ownerUserId;
 
 console.log("CLAIM NOTIFICATION SENT TO:", ownerUserId);
 
+// Send notification to item owner when a claim is submitted
 await db.collection("notifications").insertOne({
   userId: ownerUserId,
   type: "claim",
@@ -145,6 +156,7 @@ await db.collection("notifications").insertOne({
   createdAt: new Date()
 });
 
+// Emit real-time notification using Socket.IO
 io.to(`user:${ownerUserId}`).emit(
   "newNotification",
   {
@@ -154,7 +166,7 @@ io.to(`user:${ownerUserId}`).emit(
   }
 );
 
-    if (!isVerified) {
+    if (!isVerified) {  // Notify claimant if verification answers do not match
       await db.collection("notifications").insertOne({
         userId: req.user.id,
         type: "claim",
@@ -165,13 +177,13 @@ io.to(`user:${ownerUserId}`).emit(
       });
 
       io.to(`user:${req.user.id}`).emit(
-  "newNotification",
-  {
-    type: "claim",
-    text: `Claim rejected for ${report.itemName}. Verification answers did not match.`,
-    reportId: report._id.toString()
-  }
-);
+        "newNotification",
+        {
+          type: "claim",
+          text: `Claim rejected for ${report.itemName}. Verification answers did not match.`,
+          reportId: report._id.toString()
+        }
+      );
 
       return res.status(400).json({
         message: "Verification failed. The item stays open in the feed.",
@@ -179,7 +191,7 @@ io.to(`user:${ownerUserId}`).emit(
       });
     }
 
-    await db.collection("reports").updateOne(
+    await db.collection("reports").updateOne(  // Update item status to resolved after successful claim verification
   { _id: new ObjectId(reportId) },
   {
     $set: {
@@ -190,7 +202,7 @@ io.to(`user:${ownerUserId}`).emit(
   }
 );
 
-
+    // Create secure chat between item owner and claimant
     let existingChat = await db.collection("messages").findOne({
       type: "chat",   // ✅ ADD THIS
       reportId,
@@ -205,7 +217,7 @@ if (!existingChat) {
     ownerUserId: report.ownerUserId,
     claimantUserId: req.user.id,
     claimId: result.insertedId.toString(),
-    contactUnlocked: true,
+    contactUnlocked: true,  // Unlock contact details after claim approval
     lastMessage: "",
     lastMessageAt: null,
     createdAt: new Date(),
@@ -225,7 +237,8 @@ if (!existingChat) {
     }
   );
 }
-
+    
+    // Notify claimant that the claim has been successfully verified
     await db.collection("notifications").insertOne({
       userId: req.user.id,
       type: "claim",
@@ -236,13 +249,13 @@ if (!existingChat) {
     });
 
     io.to(`user:${req.user.id}`).emit(
-  "newNotification",
-  {
-    type: "claim",
-    text: `Claim verified for ${report.itemName}. The item is now closed.`,
-    reportId: report._id.toString()
-  }
-);
+      "newNotification",
+      {
+        type: "claim",
+        text: `Claim verified for ${report.itemName}. The item is now closed.`,
+        reportId: report._id.toString()
+      }
+    );
 
     res.status(201).json({
       message: "Claim verified successfully. The item is now closed.",
@@ -254,6 +267,7 @@ if (!existingChat) {
   }
 });
 
+// Route to retrieve pending claims for the item owner
 router.get("/pending", authMiddleware, async (req, res) => {
   try {
     const db = getDB();
@@ -292,6 +306,7 @@ router.get("/mine", authMiddleware, async (req, res) => {
   }
 });
 
+// Route to approve or reject a claim submitted by another user
 router.patch("/:id/decision", authMiddleware, async (req, res) => {
   try {
     const db = getDB();
@@ -310,7 +325,7 @@ router.patch("/:id/decision", authMiddleware, async (req, res) => {
       return res.status(403).json({ message: "Not allowed" });
     }
 
-    const nextStatus = decision === "approve" ? "Approved" : "Rejected";
+    const nextStatus = decision === "approve" ? "Approved" : "Rejected";  // Determine claim status based on owner's decision
 
     await db.collection("claims").updateOne(
       { _id: new ObjectId(claimId) },
