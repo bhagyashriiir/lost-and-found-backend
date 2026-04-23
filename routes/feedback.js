@@ -1,3 +1,36 @@
+/*
+=============================================================
+Project: Lost & Found Web Application
+Module: CST3990 Undergraduate Individual Project
+File Name: feedback.js
+
+Author: Bhagyashri Roopesh
+Student ID: M00975809
+University: Middlesex University Dubai
+
+Date Created: 20 March 2026
+Last Modified: 23 April 2026
+
+Description:
+This route handles user feedback submission and retrieval.
+It allows authenticated users to submit feedback messages
+and enables the system to display feedback to other users.
+It also triggers real-time updates when new feedback is added.
+
+Version: 1.0
+
+GitHub Repository:
+https://github.com/bhagyashriiir/lost-and-found-backend
+
+Modifications:
+-------------------------------------------------------------
+20/03/2026  Bhagyashri Roopesh   Implemented feedback submission
+05/04/2026  Bhagyashri Roopesh   Added feedback retrieval API
+18/04/2026  Bhagyashri Roopesh   Integrated real-time feedback updates
+23/04/2026  Bhagyashri Roopesh   Final testing
+=============================================================
+*/
+
 // Import required modules for routing, database connection and authentication
 const express = require("express");
 const { getDB } = require("../config/db");

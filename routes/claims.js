@@ -1,3 +1,36 @@
+/*
+=============================================================
+Project: Lost & Found Web Application
+Module: CST3990 Undergraduate Individual Project
+File Name: claims.js
+
+Author: Bhagyashri Roopesh
+Student ID: M00975809
+University: Middlesex University Dubai
+
+Date Created: 05 March 2026
+Last Modified: 23 April 2026
+
+Description:
+This route manages the claim process for lost items. It
+verifies user responses to ownership questions, updates
+report status to resolved and initiates secure messaging
+between users after successful verification.
+
+Version: 1.0
+
+GitHub Repository:
+https://github.com/bhagyashriiir/lost-and-found-backend
+
+Modifications:
+-------------------------------------------------------------
+05/03/2026  Bhagyashri Roopesh   Created claim verification logic
+15/03/2026  Bhagyashri Roopesh   Added report status update
+10/04/2026  Bhagyashri Roopesh   Integrated secure chat creation
+23/04/2026  Bhagyashri Roopesh   Final testing
+=============================================================
+*/
+
 console.log("CLAIMS ROUTE LOADED");
 
 // Import required modules for handling claims, database operations and authentication

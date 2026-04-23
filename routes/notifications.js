@@ -1,3 +1,36 @@
+/*
+=============================================================
+Project: Lost & Found Web Application
+Module: CST3990 Undergraduate Individual Project
+File Name: notifications.js
+
+Author: Bhagyashri Roopesh
+Student ID: M00975809
+University: Middlesex University Dubai
+
+Date Created: 12 March 2026
+Last Modified: 23 April 2026
+
+Description:
+This route manages user notifications within the system.
+It retrieves user-specific notifications and allows users
+to mark notifications as read. Notifications are generated
+for events such as new messages, claim updates and matches.
+
+Version: 1.0
+
+GitHub Repository:
+https://github.com/bhagyashriiir/lost-and-found-backend
+
+Modifications:
+-------------------------------------------------------------
+12/03/2026  Bhagyashri Roopesh   Created notification API
+22/03/2026  Bhagyashri Roopesh   Added mark-as-read functionality
+15/04/2026  Bhagyashri Roopesh   Improved notification sorting
+23/04/2026  Bhagyashri Roopesh   Final testing
+=============================================================
+*/
+
 // Import required modules for handling notifications and database operations
 const express = require("express");
 const { ObjectId } = require("mongodb");

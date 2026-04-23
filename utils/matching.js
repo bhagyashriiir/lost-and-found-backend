@@ -1,3 +1,38 @@
+/*
+=============================================================
+Project: Lost & Found Web Application
+Module: CST3990 Undergraduate Individual Project
+File Name: matching.js
+
+Author: Bhagyashri Roopesh
+Student ID: M00975809
+University: Middlesex University Dubai
+
+Date Created: 20 February 2026
+Last Modified: 23 April 2026
+
+Description:
+This file implements the intelligent matching and duplicate
+detection logic for the Lost & Found system. It calculates
+similarity scores between lost and found reports using
+multiple attributes such as category, location, description,
+date and time. It also identifies potential matches and
+prevents duplicate report submissions.
+
+Version: 1.0
+
+GitHub Repository:
+https://github.com/bhagyashriiir/lost-and-found-backend
+
+Modifications:
+-------------------------------------------------------------
+20/02/2026  Bhagyashri Roopesh   Created matching algorithm
+18/03/2026  Bhagyashri Roopesh   Added similarity scoring logic
+02/04/2026  Bhagyashri Roopesh   Implemented duplicate detection
+23/04/2026  Bhagyashri Roopesh   Final optimization and testing
+=============================================================
+*/
+
 // Normalize text by converting to lowercase and removing special characters
 function normalizeText(value) {
   return String(value || "")

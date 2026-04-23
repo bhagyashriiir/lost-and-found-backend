@@ -1,3 +1,36 @@
+/*
+=============================================================
+Project: Lost & Found Web Application
+Module: CST3990 Undergraduate Individual Project
+File Name: messages.js
+
+Author: Bhagyashri Roopesh
+Student ID: M00975809
+University: Middlesex University Dubai
+
+Date Created: 10 March 2026
+Last Modified: 23 April 2026
+
+Description:
+This route manages secure messaging between users after
+successful claim verification. It handles message sending,
+retrieval of chat threads and storage of conversation data
+in the database.
+
+Version: 1.0
+
+GitHub Repository:
+https://github.com/bhagyashriiir/lost-and-found-backend
+
+Modifications:
+-------------------------------------------------------------
+10/03/2026  Bhagyashri Roopesh   Implemented messaging system
+18/03/2026  Bhagyashri Roopesh   Added chat thread retrieval
+07/04/2026  Bhagyashri Roopesh   Improved message validation
+23/04/2026  Bhagyashri Roopesh   Final testing
+=============================================================
+*/
+
 // Import required modules for messaging functionality and database operations
 const express = require("express");
 const { ObjectId } = require("mongodb");
@@ -109,7 +142,7 @@ router.post("/start", authMiddleware, async (req, res) => {
 
   lastMessage: "",
   lastMessageAt: null,
-  
+
   createdAt: new Date(),
   updatedAt: new Date()
 };

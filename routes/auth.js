@@ -1,3 +1,36 @@
+/*
+=============================================================
+Project: Lost & Found Web Application
+Module: CST3990 Undergraduate Individual Project
+File Name: auth.js
+
+Author: Bhagyashri Roopesh
+Student ID: M00975809
+University: Middlesex University Dubai
+
+Date Created: 15 February 2026
+Last Modified: 23 April 2026
+
+Description:
+This route handles user authentication processes including
+user registration, login and token generation using JSON
+Web Tokens (JWT). It ensures secure access to protected
+system features.
+
+Version: 1.0
+
+GitHub Repository:
+https://github.com/bhagyashriiir/lost-and-found-backend
+
+Modifications:
+-------------------------------------------------------------
+15/02/2026  Bhagyashri Roopesh   Implemented user login system
+20/02/2026  Bhagyashri Roopesh   Added JWT authentication
+12/04/2026  Bhagyashri Roopesh   Improved error handling
+23/04/2026  Bhagyashri Roopesh   Final testing
+=============================================================
+*/
+
 // Import required modules for authentication and database operations
 const express = require("express");
 const bcrypt = require("bcrypt");

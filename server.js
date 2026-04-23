@@ -1,3 +1,37 @@
+/*
+=============================================================
+Project: Lost & Found Web Application
+Module: CST3990 Undergraduate Individual Project
+File Name: server.js
+
+Author: Bhagyashri Roopesh
+Student ID: M00975809
+University: Middlesex University Dubai
+
+Date Created: 16 February 2026
+Last Modified: 23 April 2026
+
+Description:
+This file initializes the Express server, connects to the MongoDB
+database and configures API routes and real-time communication
+using Socket.IO.
+
+Version: 1.0
+
+GitHub Repository:
+https://github.com/bhagyashriiir/lost-and-found-backend
+
+Modifications:
+-------------------------------------------------------------
+Date        Author                Description
+-------------------------------------------------------------
+16/02/2026  Bhagyashri Roopesh   Created server setup
+05/03/2026  Bhagyashri Roopesh   Added Socket.IO integration
+12/04/2026  Bhagyashri Roopesh   Implemented real-time notifications
+23/04/2026  Bhagyashri Roopesh   Final testing and bug fixes
+=============================================================
+*/
+
 // Load environment variables from .env file for secure configuration
 require("dotenv").config();
 

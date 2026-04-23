@@ -1,3 +1,37 @@
+/*
+=============================================================
+Project: Lost & Found Web Application
+Module: CST3990 Undergraduate Individual Project
+File Name: report.js
+
+Author: Bhagyashri Roopesh
+Student ID: M00975809
+University: Middlesex University Dubai
+
+Date Created: 01 March 2026
+Last Modified: 23 April 2026
+
+Description:
+This route manages the creation, retrieval and updating
+of lost and found reports. It handles image uploads,
+automatic category detection, duplicate detection
+and real-time report notifications.
+
+Version: 1.0
+
+GitHub Repository:
+https://github.com/bhagyashriiir/lost-and-found-backend
+
+Modifications:
+-------------------------------------------------------------
+01/03/2026  Bhagyashri Roopesh   Implemented report submission
+08/03/2026  Bhagyashri Roopesh   Added image upload support
+18/03/2026  Bhagyashri Roopesh   Integrated matching algorithm
+14/04/2026  Bhagyashri Roopesh   Added real-time notifications
+23/04/2026  Bhagyashri Roopesh   Final testing
+=============================================================
+*/
+
 const multer = require("multer");
 const path = require("path");
 const express = require("express");
